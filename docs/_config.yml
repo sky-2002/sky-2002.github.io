@@ -40,6 +40,8 @@ theme: minima
 # theme: null
 plugins:
   - jekyll-feed
+plugins:
+  - jekyll-gist
   # - jekyll-remote-theme
 # Exclude from processing.
 # The following items will not be processed, by default.
