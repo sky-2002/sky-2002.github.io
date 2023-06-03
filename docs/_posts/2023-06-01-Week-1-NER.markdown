@@ -1,0 +1,42 @@
+---
+title: '(GSoC) Week-1 Named Entity Recognition'
+categories: GSoC
+tags: GSoC
+---
+
+Hi! In this post, I will be talking about NER, a very popular and important task in NLP!
+
+#### **Background**
+Named Entity Recognition, which is a subtask of natural language processing (NLP), involves identifying and classifying named entities within a given text. The goal is to identify and categorize the entities present in text. This also forms a step in our goal of relation extraction.
+
+Entities present in text can be calssified(broadly) into a variaty of types like `PERSON`, `ORGANIZATION`, `LOCATION`, `TIME`, etc. It is easy for humans to identify and categorize entities from text. When we read or hear a sentence like **"<span style="color:green">Messi</span> <span style="color:orange">is a football player of</span> <span style="color:green">Argentina</span>"**, we can easily identify that **Messi** is a person and **Argentina** is a location/country. Identifying these further helps us understand the relation between them, in this case, the relation is - **player of**. We can think of named entities as answers to **wh** questions like **Who, What, When ,Where** etc. in a sentence. But it is not as easy for a machine to understand and process text as we do. For this, we need either rule based methods or machine learning/deep learning approaches. 
+
+#### **Some use cases of NER**
+- In summarization using AI, NER helps in identifying useful and important words needed to be included in the summary.
+- In question-answering systems, NER is extremely important as it can affect the flow of the conversation. For example, in a banking chatbot, identifying the account number, name, salary etc. of the user through the conversational texts can help execute queries(like checking balance) in the backend.
+- In improving search quality by weighing important words.
+
+#### **Methods to perform NER**
+1. **Dictionary based** - This is the simplest approach, we can just store all the entities that we know and their types. We can then search for these in the text that we have. But this dictionary needs to be updated manually when we have newer texts and different domains.
+
+2. **Rule based** - In this, we define some rules after identifying patterns in our text and try to match these on newer texts to identify entities. An amazing tool to explore rule based entity extraction is the [spacy matcher explorer](https://demos.explosion.ai/matcher). In spacy we can specify patterns and provide them to the matcher which then finds for them in the text. In the pattern, each dictionary object represents a token, and as two dictionaries there, we are trying to match two words. For more information on rule based matching and defining patterns, refer to[spacy-rule-based-matching](https://spacy.io/usage/rule-based-matching). This pattern based approach can be enhanced by using `regex` with spacy `EntityRuler`, which can later be combined with other models to perform the task better.
+{% highlight python%}
+#=> In this we are trying to match two tokens
+#=> First, we want to match a token whose lower form is 'computer' and is a 'NOUN'
+#=> Second, we want to match a word whose POS tag is not 'VERB'
+pattern = [{'LOWER': 'computer', 'POS': 'NOUN'},
+             {'POS':{'NOT_IN': ['VERB']}}]
+{% endhighlight %} 
+
+{:start="3"}
+3. **Machine learning and Deep learning** - These approach treat NER as a classification problem. For every word in the text, we try to predict whether it is an entity type or not. For example if we have a DL model for identifying persons and organizations, then we will have 3 labels `PER`, `ORG` and say `NULL`(for not an entity). And for every word, we can pass the word embedding through fully connected layers with a softmax at the end, and try to predict its entity type or class. For this type of training, annotated datasets are used and so we know what each word is and we can find the loss and train the model. It is similar to text classification, just that we are classifying each word to some class. 
+
+    On top of all this, there are a few interesting things, implemented in spacy:
+    - **CRF** - When we use softmax, we only consider the probability distribution for the given word to predict its entity type. Though we can get information from the context while creating the word embeddings, the final tagging is still local. CRF takes into account the tags of previous word also while determining the tag of a word.
+
+    - **Bloom embeddings** - Usually the word embeddings are stored in an embeddings table, for each word, there is a row in this table(which is its embedding). It is very intuitive that as the vocabulary grows or the embedding dimension grows, the size(on disk or in memory) of this table will also increase. There can be many unique words in the text, and hence a very large vocab. But the table size should be limited. For this, we need to have two or more words collide on an embedding. In bloom embeddings, what they do is, assign embeddings to words radomly using hashing, and this step is repeated. Even if some words collide over some embedding in one hash, there is a rare chane that they collide on all hashes. So if we assign multiple embeddings to each word and then use all of them(use some aggrgation like sum, concat etc), we will most likely end up having unique representation for all words, even if we had far less embeddings to start with in the table. Refer to [this](https://explosion.ai/blog/bloom-embeddings) blog for more details along with code.
+
+A demo of NER using spacy:
+{% gist 0cb4d178016e9c832ad4fc7986dd8009 %}
+
+Thank you!
