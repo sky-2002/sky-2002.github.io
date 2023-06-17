@@ -39,3 +39,4 @@ As the coding period begins next week, I spent community bonding period learning
 As I will move through the project, I will try to document my learnings and project status through this. 
 
 Thank you!
+{% include utterances.html %}

@@ -43,3 +43,4 @@ I will keep this one a shorter blog in terms of concepts, but a more code and de
 More about entity linking and the approaches I will use in the next blog!
 
 Thanks!
+{% include utterances.html %}
