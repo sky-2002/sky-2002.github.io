@@ -40,3 +40,4 @@ A demo of NER using spacy:
 {% gist 0cb4d178016e9c832ad4fc7986dd8009 %}
 
 Thank you!
+{% include utterances.html %}

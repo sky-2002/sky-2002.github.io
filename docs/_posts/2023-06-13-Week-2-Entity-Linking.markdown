@@ -1,5 +1,5 @@
 ---
-title: '(GSoC) Week-2 Entity Linking'
+title: '(GSoC) Week-2 Entity Linking - Intro'
 categories: GSoC
 tags: GSoC
 ---
