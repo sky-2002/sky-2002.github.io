@@ -67,3 +67,9 @@ footertitle: Contact
 domain: sky-2002.github.io       # if you want to force HTTPS, specify the domain without the http at the start, e.g. example.com
 # url: https://sky-2002.github.io  # the base hostname and protocol for your site, e.g. http://example.com
 # baseurl: /blog 
+
+# To make future posts visible while developing
+future: True
+
+kramdown:
+  auto_ids: true
