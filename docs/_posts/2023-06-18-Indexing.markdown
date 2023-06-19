@@ -1,0 +1,28 @@
+---
+title: 'Indexing in information retrieval'
+categories: IR
+tags: IR
+---
+
+Hello. This blog is about indexing techniques used in information retrieval. I will try to cover some basic indexing techniques and also provide code for some of them.
+
+#### **What is indexing?**
+An index is a data structure that is created to efficiently store and retrieve information from a collection of documents or data. The index allows for quick lookup and retrieval of documents based on user queries or search terms. In search engines, web pages are indexed, when user enters a query, the engine finds the relevant documents quickly using the index. Below are some indexing techniques:
+
+- <u>Inverted index</u> - Simply put, an inverted index is a mapping from tokens/words to the documents/texts that contain them. To create an inverted index, the document is pre-processed(stemming, normalization, stop-word removal etc), then tokenized, and then each term is added to the index along with the document IDs of documents in which it appears.
+    
+<figure>    
+<img src="/assets/images/inverted_index_map_reduce.png" alt= "Inverted Index" width="650" height="450" display="block" style="border:5px solid black">
+<figcaption text-align="center">Inverted index construction along with freq count using map-reduce</figcaption>
+</figure>   
+
+- <u>N-gram indexing</u> - It is similar to inverted index, just that instead of using tokens, it splits the text into n-grams and adds them to the index along with the docIDs of the documents in which they appear.
+
+- <u>Positional indexing</u> - Along with the docIDs, this also stores the position of the token/n-gram in the each document where it appears, this helps in phrase and proximity searching.
+
+<!-- As for textual search, indexing is also used to search for entities based on candidate entities. In this, we can think of documents as entities/esources in a knowledge base and the query as the candidate entities extracted from text, and we search for the resources that best link/match to these. -->
+
+<!-- <span style="color:brown">**Compression**</span> - Indexes can become memory intensive, especially for large document collections, so compression techniques like dictionary encoding(replacing unique index terms with integer identifiers), variable byte encoding, gap encoding, front codint etc. I will discuss in detail about these in some other blog post. For now, please refer to [this](https://nlp.stanford.edu/IR-book/pdf/05comp.pdf). -->
+
+#### **Some basic code**
+
