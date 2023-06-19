@@ -25,4 +25,5 @@ An index is a data structure that is created to efficiently store and retrieve i
 <!-- <span style="color:brown">**Compression**</span> - Indexes can become memory intensive, especially for large document collections, so compression techniques like dictionary encoding(replacing unique index terms with integer identifiers), variable byte encoding, gap encoding, front codint etc. I will discuss in detail about these in some other blog post. For now, please refer to [this](https://nlp.stanford.edu/IR-book/pdf/05comp.pdf). -->
 
 #### **Some basic code**
-
+I have referred to [this](https://nlpforhackers.io/building-a-simple-inverted-index-using-nltk/) site for the code, all credits to them.
+{% gist a27a36ce36068ee25fce2ea9cd64c3f3 %}
