@@ -49,7 +49,9 @@ alt= "Constrained trie" width="400" height="200" text-align="center"> -->
 #### **End-to-End entity linking**
 GENRE also address end-to-end EL problem. Given a document, it can return the document with entity mentions annotated with KB entity spans. At each generation step, the decoder is either generating a mention span, generating a link to a mention, or continuing from the input source. 
 
-In the next blog, I will provide some code to experiment with GENRE. 
+#### **Sample code to use GENRE for entity linking**
+{% gist 7d9d0b2e7722a978b0d217accc6fac31 %}
+
 Thank you!
 <hr>
 {% include utterances.html %}
