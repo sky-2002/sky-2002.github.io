@@ -73,3 +73,5 @@ future: True
 
 kramdown:
   auto_ids: true
+
+show_excerpts: true
