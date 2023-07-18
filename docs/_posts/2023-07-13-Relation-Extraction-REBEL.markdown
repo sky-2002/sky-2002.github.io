@@ -26,7 +26,7 @@ They do something called triplet linearization. Sort entities by order of appear
 
 We can see in the image above how we take the first head entity - "This must be the place" - and put in appropriate tokens all its relations and tail entities. We then begin with a new triplet with a new head entity. This also makes decoding text length less as we only decode the head entity once. 
 
-While doing the joint NER and RE, they use <i><PER></i> or <i><ORG></i> tokens for entities. 
+While doing the joint NER and RE, they use <i>&lt;PER&gt;</i> or <i>&lt;ORG&gt;</i> tokens for entities. 
 
 Find the demo code below:
 
