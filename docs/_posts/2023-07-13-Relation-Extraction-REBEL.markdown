@@ -10,7 +10,7 @@ Hello. The previous blog was the last in the entity-linking part of the project.
 REBEL is a text2text model trained by [BabelScape](https://babelscape.com/) by fine-tuning <i>BART</i> for translating a raw input sentence containing entities and implicit relations into a set of triplets that explicitly refer to those relations. It has been trained on more than 200 different relation types.
 REBEL is a joint model, meaning that it extracts entities and relations simultaneously.
 
-### Why Seq2Seq approach?**
+### **Why Seq2Seq approach?**
 Early approaches to relation extraction treated it like a pipeline - extracting entities first and then classifying the relation. Early end-2-end approaches that used transformers used neural networks to classify all word pairs in a text, much like using embeddings of two entities to predict the relation between them. The problem with these approaches is that they assume a single relation between an entity-pair. An overhead of these methods is that they need to find all word pairs in the text, which makes them computationally expensive.
 
 Benefits of Seq2Seq approach to RE are that we can have decoding mechanisms to output same entities multiple times and also can be conditioned to avoid incompatible relations. 
