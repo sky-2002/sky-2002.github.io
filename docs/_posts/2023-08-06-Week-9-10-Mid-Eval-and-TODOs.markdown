@@ -61,6 +61,8 @@ Following are the tasks that need to be addressed.
     ```
     The above sentences are factually correct, but contain negations. We can clearly see that REBEL extracts wrong(opposite) relations in them.
 
+    For the discussion with the author, refer here - [Problem with negations in sentences](https://github.com/Babelscape/rebel/issues/66)
+
 - <u>Add coreference resolution to get more relations</u> - This is because there may be sentences that may use pronouns to refer to an entity and have a relation. For example <span style="color:green">Messi is an Argentinian footballer. He previously played for PSG. Now he has joined Inter Miami</span>. In this sentence, <span style="color:green">he</span> refers to <span style="color:green">Messi</span>. So we would like the text to be coreference-resolved in order to not miss the relations in the second sentence.
 
 We are working on these TODOs and would get back with some solutions in the next blog!
