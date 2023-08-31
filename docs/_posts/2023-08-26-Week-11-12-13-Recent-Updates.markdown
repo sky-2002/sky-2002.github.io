@@ -37,7 +37,7 @@ On an average, it takes around `0.5-0.6 seconds` per sentence.
 
 **<u>End-2-End Extraction</u>** - This time this takes depends on the number of triples that are extracted from the sentence that is passed to this. If we consider around 5 triples per sentence(considering long sentences), it takes around `25 seconds` on an average. This is justifiable as each triples has 2 entities and 1 predicate, so as per previous points, REBEL takes around `0.5 seconds`, then we need around  `2.26 x 2 = 4.52 seconds` for entity linking. So, it adds up to about **`5 seconds` per triple**. 
 
-To understand the time taken for this end-2-end process, we need to get some insights into the lengths of the wikipedia texts, sentences etc. Below is a plot of the distribution of sentence lengths in terms of words:
+To understand the time taken for this end-2-end process, we need to get some insights into the lengths of the wikipedia texts, sentences etc. Below is a plot of the distribution of sentence lengths in terms of words(analysed over some wiki pages):
 <img src="/assets/images/sentence_length_dist_words.png">
 The mean length of a sentence is about `26 words`. There is a high chance that such sentences contain more triples. And thus, more time to process.
 
@@ -48,11 +48,89 @@ For example, consider the image below:
 
 In the above example, the sentence is about `Bruce Springsteen's speaking in the middle of East Berlin` and not about `Berlin Wall being in the middle of East Berlin`. This is some unexpected behaviour. 
 
+For the discussion with the author, refer here - [Extraction of non-existant relation](https://github.com/Babelscape/rebel/issues/67)
+
 #### **Validation issues**
 In the project description given [here](https://forum.dbpedia.org/t/towards-a-neural-extraction-framework-gsoc-2023/2083/4) and as mentioned while restating the goal, our aim is to disambiguate the relation between entities that are linked from a wiki page and thus only connected via `dbo:wikiPageWikiLink` predicate.. When we run the pipeline on a wiki page text, it gives a list of triples. These triples don't necessarily contain the current page/entity as the subject. So, in terms of validation, we can either remove those and only select the ones that have the current page as the subject entity, this will definitely solve our purpose. 
+Below is the code to fetch entities with particular predicates wrt to a given entity.
+{% raw %}
+```python
+def get_wikiPageWikiLink_entities(entity, sparql_wrapper=sparql):
+    """A function to fetch all entities connected to the given entity
+    by the dbo:wikiPageWikiLink predicate.
+
+    Args:
+        entity (_type_): The source entity, the wiki page we are parsing.
+        Example --> <http://dbpedia.org/resource/Berlin_Wall>.
+        sparql_wrapper : The SPARQL endpoint. Defaults to sparql.
+
+    Returns: List of entities.
+    """
+
+    query = f"""
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+
+    SELECT ?connected_entities
+    WHERE{{
+    {entity} dbo:wikiPageWikiLink ?connected_entities .
+    }}
+    """
+    sparql_wrapper.setQuery(query)
+    sparql_wrapper.setReturnFormat(JSON)
+    results = sparql_wrapper.query().convert()
+    entities = [
+        r["connected_entities"]["value"] for r in results["results"]["bindings"]
+    ]
+    return entities
+
+
+def get_only_wikiPageWikiLink(entity, sparql_wrapper=sparql):
+    """For a given entity(the current wiki page), returns all entities
+    that are connected with only the dbo:wikiPageWikiLink predicate and no
+    other predicate.
+    Args:
+        entity : The source entity, the current wiki page.
+        Example --> <http://dbpedia.org/resource/Berlin_Wall>.
+        sparql_wrapper : The SPARQL endpoint. Defaults to sparql.
+
+    Returns: List of entities.
+    """
+
+    query = f"""
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+
+    SELECT ?o
+    WHERE {{
+      {{
+        SELECT ?o
+        WHERE {{
+          {entity} dbo:wikiPageWikiLink ?o .
+        }}
+      }}
+      MINUS
+      {{
+        {entity} ?p ?o .
+        FILTER (?p != dbo:wikiPageWikiLink)
+      }}
+    }}
+    """
+    sparql_wrapper.setQuery(query)
+    sparql_wrapper.setReturnFormat(JSON)
+    results = sparql_wrapper.query().convert()
+    return results["results"]["bindings"]
+```
+{% endraw %}
 
 But when doing this, we may miss upon useful information regarding other entities. We need some way to keep these other triples stored or streamed somewhere so that we can still make use of them. 
 
 One way to deal with this is that we store all triples and store them in a way such that we can get all triples with a specific subject entity together, so that we can disambiguate the relationships with that entity. This is similar to the map-reduce paradigm, something like this - the mapper emits relational triples, we accumulate them my the subject as the key, and the the reducer does the disambiguation task(checking if `dbo:wikiPageWikiLink` exists and no other predicate exists) for all triples for a particular subject. 
+
+
+#### **Scaling**
+This one's probably the most important in terms of the usability of the project. We need to run our pipeline of many many wikipedia pages. In order for this to happen in a reasonable amount of time, we need to think of ways to efficiently scale this pipeline. 
+
+I was reading recently regarding streaming, message-broking etc and thought of applying this to our pipeline. Something like modelling the components in our pipeline as producers and consumers of data streams. In this way, we can process the data in transit, one component of the pipeline would not need to wait till the other components(after it) finish. This would save us a lot of time. More on this in the next blog.
+
+Thank you!
 
 {% include utterances.html %}
