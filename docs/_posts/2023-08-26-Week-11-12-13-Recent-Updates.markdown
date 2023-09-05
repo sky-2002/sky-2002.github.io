@@ -33,9 +33,36 @@ On an average, it takes around `0.5-0.6 seconds` per sentence.
 
 **<u>Entity Linking using GENRE</u>** - This step links the entity mentions extracted by REBEL with DBpedia entities. On an average, GENRE model takes around `2.26 seconds` to link one entity mention. This is probably the largest time consumer in the pipeline.
 
+<span style="animation: blinker 1.5s linear infinite; color: brown; font-family: sans-serif;">
+**Update(5th Sept, 2023)**
+</span>
+
+I tried making a small change in the way I am using GENRE, earlier we were doing this:
+```python
+outputs = model.generate(
+    **tokenizer(annotated_sentences, return_tensors="pt", padding=True),
+    num_beams=5,
+    num_return_sequences=1,
+)
+entites = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+```
+It was taking around `2.26 seconds` per entity on an average.
+Now I used transformers pipeline, and it improved the speed.
+```python
+genre_pipe = pipeline(model="facebook/genre-linking-blink", tokenizer="facebook/genre-linking-blink")
+entites = pipe(annotated_sentences)
+```
+And now we have around `0.65 seconds` per entity on an average, so a **`3.4 times performance improvement`**.
+
 **<u>Relation mapping</u>** - This is the part where we map the textual relation with a DBpedia predicate based on the vector similarity score. This part works pretty fast with about `0.025 seconds` per relation(so we can say per sentence).
 
 **<u>End-2-End Extraction</u>** - This time this takes depends on the number of triples that are extracted from the sentence that is passed to this. If we consider around 5 triples per sentence(considering long sentences), it takes around `25 seconds` on an average. This is justifiable as each triples has 2 entities and 1 predicate, so as per previous points, REBEL takes around `0.5 seconds`, then we need around  `2.26 x 2 = 4.52 seconds` for entity linking. So, it adds up to about **`5 seconds` per triple**. 
+
+<span style="animation: blinker 1.5s linear infinite; color: brown; font-family: sans-serif;">
+**Update(5th Sept, 2023)**
+
+After the performance improvements in GENRE, the new average time for end-2-end processing of each triple will be `0.5 seconds` for REBEL, then `0.65 x 2 = 1.3 seconds` for GENRE, so around **`1.8 seconds` per triple**.
+</span>
 
 To understand the time taken for this end-2-end process, we need to get some insights into the lengths of the wikipedia texts, sentences etc. Below is a plot of the distribution of sentence lengths in terms of words(analysed over some wiki pages):
 <img src="/assets/images/sentence_length_dist_words.png">
