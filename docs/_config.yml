@@ -22,8 +22,7 @@ title: Home
 email: thatteaakash@iitbhilai.ac.in
 author: Aakash Thatte
 description: >- # this means to ignore newlines until "baseurl:"
- I maintain this blog to document my learnings through projects, 
- assignments, open source contributions etc.
+ I maintain this blog to document my work and learnings.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: https://sky-2002.github.io # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: aakash_thatte
