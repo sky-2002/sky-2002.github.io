@@ -15,6 +15,7 @@ my work, which I can refer back to.
 
 #### **Open source highlights**
 - Came up with an idea of a new [entity-based RAG evaluation metric](https://github.com/explodinggradients/ragas/pull/667) and implemented in RAGAS. This metric is useful in RAG use-cases where entities are of importance and hence measuring their coverage by the context is important.
+- Expanded GPTCache with [Marqo integration](https://github.com/zilliztech/GPTCache/pull/609) for vector store and [Nomic integration](https://github.com/zilliztech/GPTCache/pull/610) for embeddings.
 - Created a [smart query routing](https://github.com/NeumTry/NeumAI/pull/61) method to route query to most relevant sink in Neum AI.
 - Implemented [BLEU](https://github.com/uptrain-ai/uptrain/pull/443) and [METEOR](https://github.com/uptrain-ai/uptrain/pull/457) metrics for machine translation in UpTrain AI.
 - Expanded filtering in Neum AI by adding [unified filter](https://github.com/NeumTry/NeumAI/pull/41).
