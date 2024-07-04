@@ -7,13 +7,16 @@ permalink: /about/
 <!-- #### **Introduction** -->
 
 I'm Aakash. 
-I am a Btech student in Data science and AI at IIT Bhilai. I am passionate about open source. I find NLP, graph ML and Databases interesting.
+I am a Btech student in Data science and AI at IIT Bhilai. I am passionate about open source. I find NLP and Databases interesting.
 
 I had created this blog during my GSoC to keep track of my progress. Now I plan to use it to document 
 my work, which I can refer back to.
 
 
 #### **Open source highlights**
+- **May 2024**
+    - Created a [summarization metric](https://github.com/explodinggradients/ragas/pull/990) to evaluate summarization tasks, now available in RAGAS.
+    - Integrated [epsilla retrieval module](https://github.com/stanfordnlp/dspy/pull/1068) in dspy.
 - **February 2024**
     - Came up with an idea of a new [entity-based RAG evaluation metric](https://github.com/explodinggradients/ragas/pull/667) and implemented in RAGAS. This metric is useful in RAG use-cases where entities are of importance and hence measuring their coverage by the context is important.
     - Expanded GPTCache with [Marqo integration](https://github.com/zilliztech/GPTCache/pull/609) for vector store and [Nomic integration](https://github.com/zilliztech/GPTCache/pull/610) for embeddings.
@@ -37,10 +40,10 @@ my work, which I can refer back to.
     - Implemented [new distance metrics](https://weaviate.io/blog/weaviate-1-15-release#new-distance-metrics) to weaviate. 
 
 - **May 2022**
-    - Developed an example application - [an attendance system](https://github.com/weaviate/weaviate-examples/tree/main/attendance-system-example) - using a vector DB. It was also used by their GSoC contributor that year.
+    - Developed an example application - [an attendance system](https://github.com/weaviate/weaviate-examples/tree/main/attendance-system-example) - using a vector DB. It was also used by weaviate's GSoC contributor that year.
 
 - **March and April 2022**
-    - Developed a [multi-modal search example](https://github.com/weaviate/weaviate-examples/tree/main/exploring-multi2vec-clip-with-Python-and-flask) which was also used in their GSoC project.
+    - Developed a [multi-modal search example](https://github.com/weaviate/weaviate-examples/tree/main/exploring-multi2vec-clip-with-Python-and-flask) which was also used in weaviate's GSoC project.
 
 <!-- You can find the source code for Minima at GitHub:
 [jekyll][jekyll-organization] /
