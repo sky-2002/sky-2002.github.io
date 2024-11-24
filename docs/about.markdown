@@ -6,14 +6,17 @@ permalink: /about/
 
 <!-- #### **Introduction** -->
 
-I'm Aakash. 
-I am a Btech student in Data science and AI at IIT Bhilai. I am passionate about open source. I find NLP and Databases interesting.
+Hi, I'm Aakash!
+I hold a B.Tech in Data Science and AI and work as an ML Engineer at [Needl](https://www.needl.ai/), where I collaborate with a talented and supportive team to solve challenges in areas like Retrieval-Augmented Generation (RAG), question answering, and automated multi-document report generation.
 
-I had created this blog during my GSoC to keep track of my progress. Now I plan to use it to document 
-my work, which I can refer back to.
+I have a strong passion for NLP and databases, and I deepen my knowledge by exploring blogs, videos, online courses, and podcasts. I also enjoy contributing to open-source projects—while many of my contributions are small, I strive to make meaningful and impactful ones.
+
+Reading research papers is another interest of mine, especially when I can apply their ideas and insights to real-world problems in my work.
 
 
 #### **Open source highlights**
+- **November 2024**
+    - Added `model2vec` [embedding support](https://github.com/bhavnicksm/chonkie/pull/41) to `chonkie` semantic chunker.
 - **May 2024**
     - Created a [summarization metric](https://github.com/explodinggradients/ragas/pull/990) to evaluate summarization tasks, now available in RAGAS.
     - Integrated [epsilla retrieval module](https://github.com/stanfordnlp/dspy/pull/1068) in dspy.
