@@ -11,7 +11,7 @@ I hold a B.Tech in Data Science and AI and work as an ML Engineer at [Needl](htt
 
 I have a strong passion for NLP and databases, and I deepen my knowledge by exploring blogs, videos, online courses, and podcasts. I also enjoy contributing to open-source projects—while many of my contributions are small, I strive to make meaningful and impactful ones.
 
-During my BTech, I have had a good time exploring Linear Algebra, Probabolity & Statistics, classical ML, Adversarial ML, GPU architecture (using CUDA) and Psychology.
+During my BTech, I have had a good time exploring Linear Algebra, Probability & Statistics, classical ML, Adversarial ML, GPU architecture (using CUDA) and Psychology.
 
 Reading research papers is another interest of mine, especially when I can apply their ideas and insights to real-world problems in my work.
 
