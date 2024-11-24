@@ -15,7 +15,7 @@ During my BTech, I have had a good time exploring Linear Algebra, Probabolity & 
 
 Reading research papers is another interest of mine, especially when I can apply their ideas and insights to real-world problems in my work.
 
-#### Interested in My Work?  
+#### **Interested in My Work?**  
 [📄 Check Out My Resume Here](./assets/Resume.pdf)  
 
 
