@@ -7,16 +7,14 @@ permalink: /about/
 <!-- #### **Introduction** -->
 
 Hi, I'm Aakash!
-I hold a B.Tech in Data Science and AI and work as an ML Engineer at [Needl](https://www.needl.ai/), where I collaborate with a talented and supportive team to solve challenges in areas like Retrieval-Augmented Generation (RAG), question answering, and automated multi-document report generation.
+I hold a B.Tech in Data Science and AI and work as an ML Engineer at [Needl](https://www.needl.ai/), where we are working to solve information overload problems in the finance domain. As part of my role, I work on developing and deploying NLP solutions, working on document AI, and more recently, around agents for automated insights generation.
 
-I have a strong passion for NLP and databases, and I deepen my knowledge by exploring blogs, videos, online courses, and podcasts. I also enjoy contributing to open-source projects—while many of my contributions are small, I strive to make meaningful and impactful ones.
+During my bachelors, I have had a good time exploring Linear Algebra, Probability & Statistics, classical ML, Adversarial ML, GPU architecture (using CUDA) and Psychology.
 
-During my BTech, I have had a good time exploring Linear Algebra, Probability & Statistics, classical ML, Adversarial ML, GPU architecture (using CUDA) and Psychology.
+I like reading crisp research papers, especially when I can quickly try out and apply their ideas and insights to real-world problems.
 
-Reading research papers is another interest of mine, especially when I can apply their ideas and insights to real-world problems in my work.
-
-#### **Interested in My Work?**  
-[📄 Check Out My Resume Here](./assets/Resume.pdf)  
+#### **Interested in Collaborating?**  
+[📄 View my Resume here](./assets/Resume.pdf)  
 
 
 #### **Open source highlights**
