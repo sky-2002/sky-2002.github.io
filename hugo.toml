@@ -1,0 +1,49 @@
+baseURL = "https://sky-2002.github.io/"
+languageCode = "en-us"
+title = "Aakash Thatte"
+theme = "PaperMod"
+
+[pagination]
+pagerSize = 10
+
+[params]
+description = "I maintain this blog to document my work and learnings."
+defaultTheme = "auto"
+ShowReadingTime = true
+ShowPostNavLinks = true
+ShowCodeCopyButtons = true
+ShowToc = true
+math = true
+
+[params.homeInfoParams]
+Title = "Hi, I'm Aakash 👋"
+Content = "ML Engineer at [Needl](https://www.needl.ai/). I maintain this blog to document my work and learnings — currently: RL with verifiable rewards, inference engineering, and whatever else I'm poking at."
+
+[[params.socialIcons]]
+name = "github"
+url = "https://github.com/sky-2002"
+
+[[params.socialIcons]]
+name = "x"
+url = "https://x.com/aakash_thatte"
+
+[[params.socialIcons]]
+name = "linkedin"
+url = "https://www.linkedin.com/in/aakash-thatte/"
+
+[menu]
+[[menu.main]]
+identifier = "about"
+name = "About"
+url = "/about/"
+weight = 10
+
+[[menu.main]]
+identifier = "tags"
+name = "Tags"
+url = "/tags/"
+weight = 20
+
+[markup.highlight]
+noClasses = false
+style = "monokai"
