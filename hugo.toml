@@ -47,3 +47,14 @@ weight = 20
 [markup.highlight]
 noClasses = false
 style = "monokai"
+
+[markup.goldmark.renderer]
+unsafe = true
+
+# Hand $...$ / $$...$$ spans to MathJax untouched (stops Markdown from
+# turning LaTeX underscores into <em> tags)
+[markup.goldmark.extensions.passthrough]
+enable = true
+[markup.goldmark.extensions.passthrough.delimiters]
+block = [["$$", "$$"], ["\\[", "\\]"]]
+inline = [["$", "$"], ["\\(", "\\)"]]

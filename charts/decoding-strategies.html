@@ -1,0 +1,356 @@
+<div class="viz-root" style="margin:1.4rem 0">
+<style>
+.viz-root {
+  --vz-ink: #0b0b0b; --vz-ink2: #52514e; --vz-muted: #898781;
+  --vz-grid: #e1e0d9; --vz-axis: #c3c2b7; --vz-ctx: #b3b1a9;
+  --vz-temp: #2a78d6; --vz-trunc: #eb6834;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.dark .viz-root, body.dark .viz-root {
+  --vz-ink: #ffffff; --vz-ink2: #c3c2b7; --vz-muted: #898781;
+  --vz-grid: #2c2c2a; --vz-axis: #454440; --vz-ctx: #55544f;
+  --vz-temp: #3987e5; --vz-trunc: #d95926;
+}
+.viz-legend { display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+  font-size:13px; color:var(--vz-ink2); margin:0 0 10px 2px; }
+.viz-legend .sw { display:inline-block; width:12px; height:12px;
+  border-radius:3px; margin-right:5px; vertical-align:-1px; }
+</style>
+<div class="viz-legend" aria-hidden="false">
+  <span><span class="sw" style="background:var(--vz-temp)"></span>temperature family — correct token <code>5</code></span>
+  <span><span class="sw" style="background:var(--vz-trunc)"></span>truncation family — correct token <code>5</code></span>
+  <span><span class="sw" style="background:var(--vz-ctx)"></span>other tokens</span>
+</div>
+<svg viewBox="0 0 740 506" role="img" aria-label="Nine decoding strategies applied to the same 5-token distribution; the bar for the correct token 5 is highlighted in each panel." style="width:100%;height:auto;display:block">
+<g transform="translate(20,8)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">Greedy (T→0)</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<text x="25" y="119.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">0</text>
+<text x="25" y="73.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">0.5</text>
+<text x="25" y="27.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">1</text>
+<g>
+<title>Greedy (T→0) — token 0: 0</title>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>Greedy (T→0) — token 4: 1</title>
+<path d="M73.0,116.0 L73.0,28.0 Q73.0,24.0 77.0,24.0 L91.0,24.0 Q95.0,24.0 95.0,28.0 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>Greedy (T→0) — token 5: 0</title>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="112.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">0</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>Greedy (T→0) — token 6: 0</title>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>Greedy (T→0) — token 15: 0</title>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(260,8)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">T = 0.5</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<g>
+<title>T = 0.5 — token 0: 0.038</title>
+<path d="M37.0,116.0 L37.0,114.2 Q37.0,112.5 38.8,112.5 L57.2,112.5 Q59.0,112.5 59.0,114.2 L59.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>T = 0.5 — token 4: 0.615</title>
+<path d="M73.0,116.0 L73.0,63.4 Q73.0,59.4 77.0,59.4 L91.0,59.4 Q95.0,59.4 95.0,63.4 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>T = 0.5 — token 5: 0.154</title>
+<path d="M109.0,116.0 L109.0,105.8 Q109.0,101.8 113.0,101.8 L127.0,101.8 Q131.0,101.8 131.0,105.8 L131.0,116.0 Z" fill="var(--vz-temp)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="97.8" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.15</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>T = 0.5 — token 6: 0.154</title>
+<path d="M145.0,116.0 L145.0,105.8 Q145.0,101.8 149.0,101.8 L163.0,101.8 Q167.0,101.8 167.0,105.8 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>T = 0.5 — token 15: 0.038</title>
+<path d="M181.0,116.0 L181.0,114.2 Q181.0,112.5 182.8,112.5 L201.2,112.5 Q203.0,112.5 203.0,114.2 L203.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(500,8)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">T = 1</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<g>
+<title>T = 1 — token 0: 0.1</title>
+<path d="M37.0,116.0 L37.0,110.8 Q37.0,106.8 41.0,106.8 L55.0,106.8 Q59.0,106.8 59.0,110.8 L59.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>T = 1 — token 4: 0.4</title>
+<path d="M73.0,116.0 L73.0,83.2 Q73.0,79.2 77.0,79.2 L91.0,79.2 Q95.0,79.2 95.0,83.2 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>T = 1 — token 5: 0.2</title>
+<path d="M109.0,116.0 L109.0,101.6 Q109.0,97.6 113.0,97.6 L127.0,97.6 Q131.0,97.6 131.0,101.6 L131.0,116.0 Z" fill="var(--vz-temp)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="93.6" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.20</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>T = 1 — token 6: 0.2</title>
+<path d="M145.0,116.0 L145.0,101.6 Q145.0,97.6 149.0,97.6 L163.0,97.6 Q167.0,97.6 167.0,101.6 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>T = 1 — token 15: 0.1</title>
+<path d="M181.0,116.0 L181.0,110.8 Q181.0,106.8 185.0,106.8 L199.0,106.8 Q203.0,106.8 203.0,110.8 L203.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(20,180)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">T = 2</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<text x="25" y="119.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">0</text>
+<text x="25" y="73.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">0.5</text>
+<text x="25" y="27.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">1</text>
+<g>
+<title>T = 2 — token 0: 0.146</title>
+<path d="M37.0,116.0 L37.0,106.5 Q37.0,102.5 41.0,102.5 L55.0,102.5 Q59.0,102.5 59.0,106.5 L59.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>T = 2 — token 4: 0.293</title>
+<path d="M73.0,116.0 L73.0,93.1 Q73.0,89.1 77.0,89.1 L91.0,89.1 Q95.0,89.1 95.0,93.1 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>T = 2 — token 5: 0.207</title>
+<path d="M109.0,116.0 L109.0,100.9 Q109.0,96.9 113.0,96.9 L127.0,96.9 Q131.0,96.9 131.0,100.9 L131.0,116.0 Z" fill="var(--vz-temp)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="92.9" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.21</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>T = 2 — token 6: 0.207</title>
+<path d="M145.0,116.0 L145.0,100.9 Q145.0,96.9 149.0,96.9 L163.0,96.9 Q167.0,96.9 167.0,100.9 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>T = 2 — token 15: 0.146</title>
+<path d="M181.0,116.0 L181.0,106.5 Q181.0,102.5 185.0,102.5 L199.0,102.5 Q203.0,102.5 203.0,106.5 L203.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(260,180)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">T → ∞</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<g>
+<title>T → ∞ — token 0: 0.2</title>
+<path d="M37.0,116.0 L37.0,101.6 Q37.0,97.6 41.0,97.6 L55.0,97.6 Q59.0,97.6 59.0,101.6 L59.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>T → ∞ — token 4: 0.2</title>
+<path d="M73.0,116.0 L73.0,101.6 Q73.0,97.6 77.0,97.6 L91.0,97.6 Q95.0,97.6 95.0,101.6 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>T → ∞ — token 5: 0.2</title>
+<path d="M109.0,116.0 L109.0,101.6 Q109.0,97.6 113.0,97.6 L127.0,97.6 Q131.0,97.6 131.0,101.6 L131.0,116.0 Z" fill="var(--vz-temp)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="93.6" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.20</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>T → ∞ — token 6: 0.2</title>
+<path d="M145.0,116.0 L145.0,101.6 Q145.0,97.6 149.0,97.6 L163.0,97.6 Q167.0,97.6 167.0,101.6 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>T → ∞ — token 15: 0.2</title>
+<path d="M181.0,116.0 L181.0,101.6 Q181.0,97.6 185.0,97.6 L199.0,97.6 Q203.0,97.6 203.0,101.6 L203.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(500,180)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">Top-k, k=3</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<g>
+<title>Top-k, k=3 — token 0: 0</title>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>Top-k, k=3 — token 4: 0.5</title>
+<path d="M73.0,116.0 L73.0,74.0 Q73.0,70.0 77.0,70.0 L91.0,70.0 Q95.0,70.0 95.0,74.0 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>Top-k, k=3 — token 5: 0.25</title>
+<path d="M109.0,116.0 L109.0,97.0 Q109.0,93.0 113.0,93.0 L127.0,93.0 Q131.0,93.0 131.0,97.0 L131.0,116.0 Z" fill="var(--vz-trunc)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="89.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.25</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>Top-k, k=3 — token 6: 0.25</title>
+<path d="M145.0,116.0 L145.0,97.0 Q145.0,93.0 149.0,93.0 L163.0,93.0 Q167.0,93.0 167.0,97.0 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>Top-k, k=3 — token 15: 0</title>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(20,352)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">Top-p, p=0.8</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<text x="25" y="119.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">0</text>
+<text x="25" y="73.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">0.5</text>
+<text x="25" y="27.0" font-size="9.5" text-anchor="end" fill="var(--vz-muted)">1</text>
+<g>
+<title>Top-p, p=0.8 — token 0: 0</title>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>Top-p, p=0.8 — token 4: 0.5</title>
+<path d="M73.0,116.0 L73.0,74.0 Q73.0,70.0 77.0,70.0 L91.0,70.0 Q95.0,70.0 95.0,74.0 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>Top-p, p=0.8 — token 5: 0.25</title>
+<path d="M109.0,116.0 L109.0,97.0 Q109.0,93.0 113.0,93.0 L127.0,93.0 Q131.0,93.0 131.0,97.0 L131.0,116.0 Z" fill="var(--vz-trunc)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="89.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.25</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>Top-p, p=0.8 — token 6: 0.25</title>
+<path d="M145.0,116.0 L145.0,97.0 Q145.0,93.0 149.0,93.0 L163.0,93.0 Q167.0,93.0 167.0,97.0 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>Top-p, p=0.8 — token 15: 0</title>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(260,352)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">Top-p, p=0.5</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<g>
+<title>Top-p, p=0.5 — token 0: 0</title>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>Top-p, p=0.5 — token 4: 0.667</title>
+<path d="M73.0,116.0 L73.0,58.7 Q73.0,54.7 77.0,54.7 L91.0,54.7 Q95.0,54.7 95.0,58.7 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>Top-p, p=0.5 — token 5: 0.333</title>
+<path d="M109.0,116.0 L109.0,89.3 Q109.0,85.3 113.0,85.3 L127.0,85.3 Q131.0,85.3 131.0,89.3 L131.0,116.0 Z" fill="var(--vz-trunc)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="81.3" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">⅓</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>Top-p, p=0.5 — token 6: 0</title>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>Top-p, p=0.5 — token 15: 0</title>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+<g transform="translate(500,352)">
+<text x="30" y="12" font-size="12.5" font-weight="600" fill="var(--vz-ink2)">Min-p, p=0.3</text>
+<line x1="30" y1="70.0" x2="210" y2="70.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="24.0" x2="210" y2="24.0" stroke="var(--vz-grid)" stroke-width="1"/>
+<line x1="30" y1="116" x2="210" y2="116" stroke="var(--vz-axis)" stroke-width="1"/>
+<g>
+<title>Min-p, p=0.3 — token 0: 0</title>
+<rect x="30.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="48.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">0</text>
+<g>
+<title>Min-p, p=0.3 — token 4: 0.5</title>
+<path d="M73.0,116.0 L73.0,74.0 Q73.0,70.0 77.0,70.0 L91.0,70.0 Q95.0,70.0 95.0,74.0 L95.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="66.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="84.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">4</text>
+<g>
+<title>Min-p, p=0.3 — token 5: 0.25</title>
+<path d="M109.0,116.0 L109.0,97.0 Q109.0,93.0 113.0,93.0 L127.0,93.0 Q131.0,93.0 131.0,97.0 L131.0,116.0 Z" fill="var(--vz-trunc)"/>
+<rect x="102.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="120.0" y="89.0" font-size="11" font-weight="700" text-anchor="middle" fill="var(--vz-ink)">.25</text>
+<text x="120.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-ink)" font-weight="600">5</text>
+<g>
+<title>Min-p, p=0.3 — token 6: 0.25</title>
+<path d="M145.0,116.0 L145.0,97.0 Q145.0,93.0 149.0,93.0 L163.0,93.0 Q167.0,93.0 167.0,97.0 L167.0,116.0 Z" fill="var(--vz-ctx)"/>
+<rect x="138.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="156.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">6</text>
+<g>
+<title>Min-p, p=0.3 — token 15: 0</title>
+<rect x="174.0" y="24" width="36.0" height="106" fill="transparent"/>
+</g>
+<text x="192.0" y="130" font-size="10.5" text-anchor="middle" fill="var(--vz-muted)">15</text>
+</g>
+</svg>
+<p style="font-size:0.82em;color:var(--vz-muted);margin:6px 0 0 2px">Same model, nine decoding strategies. Each panel is the distribution the strategy actually samples from; the highlighted bar (with its value) is the probability of answering <code>2+3=</code> correctly. Hover a bar for its exact value.</p>
+</div>

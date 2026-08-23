@@ -1,0 +1,4 @@
+{{- /* Embed a self-contained chart from charts/<name>.html: {{< chart "name" >}} */ -}}
+{{- $name := .Get 0 -}}
+{{- $path := printf "charts/%s.html" $name -}}
+{{- readFile $path | safeHTML -}}
