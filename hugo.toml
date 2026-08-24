@@ -17,7 +17,7 @@ math = true
 
 [params.homeInfoParams]
 Title = "Hi, I'm Aakash 👋"
-Content = "ML Engineer at [Needl](https://www.needl.ai/). I maintain this blog to document my work and learnings — currently: RL with verifiable rewards, inference engineering, and whatever else I'm poking at."
+Content = "Building enterprise AI solutions at [Needl](https://www.needl.ai/) - everything agents, search and workflows. I am exploring and playing around with agents, [RL](https://github.com/sky-2002/tiny-RLVR/). Once a while I also try coding [model architectures](https://github.com/sky-2002/Generative-Modelling)."
 
 [[params.socialIcons]]
 name = "github"
