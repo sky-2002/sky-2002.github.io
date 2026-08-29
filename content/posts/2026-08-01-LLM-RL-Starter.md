@@ -8,13 +8,13 @@ ShowToc: true
 TocOpen: true
 ---
 
-Working through RL for LLMs from softmax all the way to a full GRPO update, on a five-token toy where the numbers stay hand-checkable. One section steps off the toy to sketch multi-step credit assignment.
+After learning about RL for LLMs in research papers, some nice youtube playlists and reading some amazing blogs, I also wanted to write one, which can introduce RL for LLMs for someone who already knows LLMs, and one which I can refer anytime as a refresher. I have tried to build this blog right from softmax all the way to GRPO, and also tried to show calculations on a five-token toy example(which I will skip in one of the sections).
 
-Goal is that we have a model that sometimes solves a task → make it solve the task more often.
+To set some base to build on, imagine that we have an LLM that solves a task sometimes, we want it to solve the task more often.
 
 ## Language model is a probability distribution
 
-During each step of autoregressive generation, an LLM produces a score (logit) for each token in the vocabulary, then converts those to probabilities with softmax. Consider the prompt `2+3=` given to our toy model whose vocabulary is `{0, 4, 5, 6, 15}`. Logits are deliberate multiples of $\ln 2$ so the softmax stays as fractions:
+During each step of autoregressive generation, an LLM produces a score (logit) for each token in the vocabulary, then converts those to probabilities with softmax. Consider the prompt `2+3=` given to our toy model whose vocabulary is `{0, 4, 5, 6, 15}`. (Logits are deliberate multiples of $\ln 2$ so the softmax stays as fractions)
 
 | Token |   0 |    4 |    5 |    6 |  15 |
 | ----: | --: | ---: | ---: | ---: | --: |
@@ -35,18 +35,18 @@ So the probabilities are:
 | Probability |    2/20 |    8/20 |    4/20 |    4/20 |    2/20 |
 |             | **0.1** | **0.4** | **0.2** | **0.2** | **0.1** |
 
-`4` dominates at 0.4, the correct answer `5` sits at 0.2. The goal is to raise that 0.2.
+`4` dominates at 0.4, the correct answer `5` sits at 0.2. But we want our model to have a higher probability for 5, to raise that 0.2.
 
 ### Decoding rearranges, it does not relocate
 
-Any decoding strategy draws from this same $\pi_\theta$. A few that matter:
+Any decoding strategy draws from this same model (we will call it $\pi_\theta$ to indicate that it is parametrized by theta). A few that matter:
 
 | Method | Effect on this $\pi_\theta$ | $P(5)$ |
 | :-- | :-- | --: |
 | Greedy | always picks `4` | **0** |
 | Sample, T=1 | draw from $\pi_\theta$ as-is | 0.20 |
 | Temperature T=0.5 | sharpen → ∝ (4, 64, 16, 16, 4) → (1/26, 8/13, 2/13, 2/13, 1/26) | 2/13 ≈ **0.154** ↓ |
-| Top-p, p=0.5 | keep {`4`,`5`}, renormalize to (0, 2/3, 1/3, 0, 0) | **1/3** ↑ |
+| Top-p, p=0.5 | keep {`4`,`5`} (`5`,`6` tie at 0.2; assume the break goes to `5`), renormalize to (0, 2/3, 1/3, 0, 0) | **1/3** ↑ |
 
 Decoding alone moves accuracy from 0 to 1/3 **without touching any weight**. The trap is T=0.5: it *lowers* $P(5)$, sharpening goes toward the wrong mode, where the mass already was. Decoding rearranges. Training relocates.
 
@@ -54,7 +54,7 @@ SFT and RL exist to make correct answers more likely under the *weights*, not ju
 
 ### One answer, two strings ("5" vs "05")
 
-So far every completion is a single token. Real answers are sequences, and sequence probability is the product of its conditionals, the chain rule:
+So far every completion is a single token. Real answers are sequences, and sequence probability is the product of its conditionals:
 
 $$
 \pi_\theta(y \mid x) = \prod_{t=1}^{T} \pi_\theta(y_{t} \mid x, y_{\lt t})
@@ -71,7 +71,7 @@ Extend the toy just enough to see this. Allow 1–2 digit answers plus EOS; the 
 | `"5"` | `5`, EOS | $0.2 \times 0.8 =$ **0.16** |
 | `"05"` | `0`, `5`, EOS | $0.1 \times 0.2 \times 1 =$ **0.02** |
 
-Same semantic answer, **8×** less probable, because every extra token multiplies by a factor $<1$, so log-probs add a penalty. This shows up twice later, once in state tracking(REINFORCE / GRPO work in log-space), and once as a real training bug (length bias). For everything else until then, completions stay one token.
+Same semantic answer, **8×** less probable, because every extra token multiplies by a factor $<1$, so log-probs add a penalty.
 
 ## Making the right answer more likely
 
@@ -79,9 +79,11 @@ Decoding rearranges probability mass where it already sits. To *relocate* mass o
 
 ### SFT
 
-Supervised finetuning does the obvious thing: show the model `(prompt, correct output)` pairs and update with cross-entropy. Before that loss, two definitions(I have added this for my own sake, I prefer refreshing when I read this).
+Supervised finetuning does the obvious thing: show the model `(prompt, correct output)` pairs and update with cross-entropy. Before that loss, let us see what entropy and cross-entropy are.
 
-The **surprise** of an outcome $i$ under a distribution $p$ is $-\log p_i$: rare events surprise more. The **entropy** of $p$ is the expected surprise:
+When some event happens very often, or is predictable, there is hardly any surprise(like we don't see news of a sunrise, not much information gain), but when something happens rarely, it does have a surprise(we do see news of solar eclipse).
+
+The **surprise** of an outcome $i$ under a distribution $p$ is given by ($-\log p_i$). The **entropy** of $p$ is the expected surprise:
 
 $$
 H(p) = \mathbb{E}_{i \sim p}[-\log p_i] = -\sum_{i} p_i \log p_i
@@ -95,9 +97,17 @@ $$
 
 $p$ is the filter indicating which events count. $q$ is the scoring rule which tells how shocking that event is to the model. The multiply is not a mix of two distributions. Tokens which the label did not choose get $p_i=0$, so their surprise is not used. Training is not "be a good distribution everywhere"; it is **don't be surprised by the token that actually showed up.**
 
-Why is the *model* in $q$'s slot? Because $-\log q_i$ is *whose* surprise is being measured so it has to be $\pi_\theta$. Order is $CE(p_{\mathrm{data}},\, \pi_\theta)$: the samples come from $p_{\mathrm{data}}$ and we calculate the expected value of the model's surprise on those samples.
+Why is the *model* in $q$'s slot? Because ($-\log q_i$) is *whose* surprise is being measured so it has to be $\pi_\theta$. Order is $CE(p_{\mathrm{data}},\, \pi_\theta)$: the samples come from $p_{\mathrm{data}}$ and we calculate the expected value of the model's surprise on those samples.
 
-When $q = p$, CE collapses to $H(p)$. When $q \neq p$, it is always at least as large: $CE(p,q) = H(p) + D_{\mathrm{KL}}(p \| q)$. That extra term is **forward KL** and it is the whole SFT objective once $p$ is a label. The catch after the toy step is exactly this term.
+When $q = p$, CE collapses to $H(p)$. When $q \neq p$, it is always at least as large: $CE(p,q) = H(p) + D_{\mathrm{KL}}(p \| q)$, where
+
+$$
+D_{\mathrm{KL}}(p \| q) = \sum_i p_i \log \frac{p_i}{q_i}
+$$
+
+is the **KL divergence** - the extra surprise you pay for scoring $p$'s events with $q$ instead of $p$ itself (zero when $q = p$, positive otherwise, and *not* symmetric: swapping $p$ and $q$ changes it, which matters later for forward vs reverse KL). 
+
+**The behavior to remember: wherever $p$ has mass but $q$ has almost none ($p_i > 0$ while $q_i \to 0$), the term $p_i \log(p_i/q_i)$ blows up, so KL stays large unless $q$ covers every place $p$ does.** That extra term is **forward KL**, and it is the whole SFT objective once $p$ is a label. 
 
 In SFT, $q_i = \pi_\theta(i \mid x)$. For a given pair $(x,y)$ and token $y_t$ in $y$, $p$ is one-hot on $y_t$, so only one term survives: $1 \cdot (-\log \pi_\theta(y_t))$. Token `4` can have huge surprise but nobody cares, because `4` did not happen. CE is just the model's surprise at the labeled token:
 
@@ -108,8 +118,10 @@ $$
 Same loss as negative log-likelihood of $y$ given $x$:
 
 $$
-NLL = -\log{\pi_\theta(y|x)} = - \log{\prod_{t=1}^{T}\pi_\theta(y_{t}|x, y_{\lt t})} \newline
-= - \sum_{t=1}^{T} \log{\pi_\theta(y_{t}|x, y_{\lt t})}
+\begin{aligned}
+NLL = -\log{\pi_\theta(y|x)} &= - \log{\prod_{t=1}^{T}\pi_\theta(y_{t}|x, y_{\lt t})} \\
+&= - \sum_{t=1}^{T} \log{\pi_\theta(y_{t}|x, y_{\lt t})}
+\end{aligned}
 $$
 
 Both views say the same thing: **make the tokens of the correct answer more likely, one token at a time**.
@@ -162,15 +174,13 @@ $$
 |     6 |     0.2 |               0 |     +0.2 |
 |    15 |     0.1 |               0 |     +0.1 |
 
-Gradient *descent* subtracts this, so the logit of `5` goes up and every other logit goes down. With learning rate 1, one step moves $\pi_\theta(5)$ from $0.2$ to $\approx 0.42$ (plug the new logits back into softmax to check). Show the model the answer once, and the correct token roughly doubles its probability.
+Gradient *descent* subtracts this, so the logit of `5` goes up and every other logit goes down. With learning rate 1, one step moves $\pi_\theta(5)$ from $0.2$ to $\approx 0.42$. Show the model the answer once, and the correct token roughly doubles its probability.
 
-We will see how large the update is when RL takes the same learning rate on the same toy, because the signal there, is different
-
-So SFT works, one step nearly doubled the right answer, and the same recipe scales, which is to show enough `(problem, solution)` pairs and the model learns the task, formats and all. Why would anything else be needed?
+So SFT works, one step nearly doubled the right answer, and the same recipe scales, which is to show enough `(problem, solution)` pairs and the model learns the task, formats and all.
 
 ### But, SFT is forward KL
 
-Labels are not the scarce resource. Addition solutions are free; synthetic data is cheap. The catch is the *loss*.
+Labels are not the scarce resource. Addition solutions are free(the point being - synthetic data is cheap). The problem is the *loss*.
 
 Cross-entropy splits as
 
@@ -178,15 +188,15 @@ $$
 CE(p, q) = H(p) + D_{\mathrm{KL}}(p \| q)
 $$
 
-$H(p)$ does not depend on the model. Minimizing CE is minimizing **forward KL** $D_{\mathrm{KL}}(p \| q)$ whic is how much extra surprise you pay for using $q$ to score events that actually came from $p$.
+$H(p)$ does not depend on the model. Minimizing CE is minimizing **forward KL** $D_{\mathrm{KL}}(p \| q)$, which is how much extra surprise you pay for using $q$ to score events that actually came from $p$.
 
-Forward KL is brutal wherever $p$ has mass and $q$ does not bebcause ($-\log q_i$) blows up. So $q$ is forced to **cover** $p$. In SFT, $p$ is a spike on one labeled string (`5`, or `"47+38=85"`). A spike has $H(p)=0$, so
+Forward KL is brutal wherever $p$ has mass and $q$ does not, because ($-\log q_i$) blows up. So $q$ is forced to **cover** $p$. In SFT, $p$ is a spike on one labeled string (`5`, or `"47+38=85"`). A spike has $H(p)=0$, so
 
 $$
 L_{\mathrm{SFT}} = D_{\mathrm{KL}}(\text{one-hot on }y^* \| \pi_\theta) = -\log \pi_\theta(y^*)
 $$
 
-The model must put mass on *that* string. Every other token is treated as a mistake, including other answers that are also right. `"05"` verifies as 5, but under teacher forcing $p(\texttt{05})=0$, so SFT pushes its probability *down* while it shoves `"5"` up. That is not a data bug. That is what forward KL to a single reference *is*.
+The model must put mass on *that* string. Every other token is treated as a mistake, including other answers that are also right. `"05"` verifies as 5, but under teacher forcing (at training time the model is fed the *reference* answer's tokens as context and scored on predicting the next reference token, never its own output) the label is `"5"`, so $p(\texttt{05})=0$ and SFT pushes its probability *down* while it shoves `"5"` up. This push-down is *not* a loss term on `"05"`, the loss names only the label `5`. It is the softmax coupling from the gradient section: raising $\pi(5)$ at step 1 necessarily drains mass from every other first token (that is the $\pi_i - p_i$ gradient), and since `"05"` must emit `0` first, draining $\pi(0)$ drains the whole `"05"` path. `"05"` simply loses the step-1 softmax competition to the label. (Concretely, for a two-token label like `85` on `47+38=`: teacher forcing scores $P(8 \mid \texttt{47+38=})$, then feeds the *true* `8` and scores $P(5 \mid \texttt{47+38=8})$ ie always conditioning on the correct prefix, never on whatever the model itself would have guessed for the first digit.) That is not a data bug. That is what forward KL to a single reference *is*.
 
 
 | | SFT (forward KL) | RL (expected reward) |
@@ -195,7 +205,7 @@ The model must put mass on *that* string. Every other token is treated as a mist
 | Other valid answers | penalized ($p=0$ there) | rewarded if the verifier says so |
 | If the model never emits $y^*$ | still a gradient: raise $y^*$ anyway | no sample, no signal |
 
-RL drops the reference $p$. Instead of covering a labeled string, raise $\pi_\theta$ on whatever the check scores. Reverse KL is mode-seeking, the $D_{\mathrm{KL}}(\pi_\theta \| \pi_{\mathrm{ref}})$ that RLHF actually uses, is the other direction of the same divergence. RLVR is just this setup with a verifier as the check.
+RL drops the reference $p$. Instead of covering a labeled string, raise $\pi_\theta$ on whatever the check scores. RLVR is just this setup with a verifier as the check.
 
 ```python
 def reward(prompt, completion):  # "47+38=", "85"
@@ -259,9 +269,9 @@ $$
 | 8 | 0.14 | |
 | 64 | 0.05 | getting usable |
 
-More samples → quieter estimate. That is why GRPO later talks about a *group* of rollouts per prompt.
+More samples → quieter estimate. GRPO later also draws a *group* of rollouts per prompt, but for a different reason than shrinking this error: the group's mean reward becomes a **baseline** that stands in for a value function, and the spread within the group is what turns rewards into per-sample advantages (both covered soon). Precisely estimating the scalar $J$ is not the point there.
 
-**What can $\hat{J}$ actually look like at $G=4$?** Only five possible values ie $0, \tfrac{1}{4}, \tfrac{1}{2}, \tfrac{3}{4}, 1$ depending on how many of the four samples are correct. With $P(\text{correct})=0.2$:
+**What can $\hat{J}$ actually look like at $G=4$?** Only five possible values, i.e. $0, \tfrac{1}{4}, \tfrac{1}{2}, \tfrac{3}{4}, 1$, depending on how many of the four samples are correct. With $P(\text{correct})=0.2$:
 
 | # correct out of 4 | $\hat{J}$ | Probability |
 | --: | --: | --: |
@@ -274,9 +284,11 @@ More samples → quieter estimate. That is why GRPO later talks about a *group* 
 Two things jump out.
 
 1. The estimator is usually $0$ or $0.25$, rarely near the true $0.2$ in a single group of 4. Unbiased on average across many groups; noisy in any one group.
-2. **About 41% of the time, all four samples are wrong.** Then $\hat{J}=0$, and every reward in the group is $0$. No correct example in the batch, nothing to reinforce. That number comes back when GRPO builds advantages inside a group(a group with zero reward variation carries zero learning signal).
+2. **About 41% of the time, all four samples are wrong.** Then $\hat{J}=0$, and every reward in the group is $0$. No correct example in the batch, nothing to reinforce. That number comes back when GRPO builds advantages inside a group (a group with zero reward variation carries zero learning signal).
 
 So a training run is a noisy estimate of a number this toy computes exactly. RL, at this level, is: estimate expectations cheaply, then differentiate them safely.
+
+**This is why a single RL run proves nothing.** A *run* here means one full training - fix a seed, train through all $N$ steps, read off the final accuracy. That final number is itself a random draw: the per-step sampling noise above compounds over the whole run, so two runs of the *identical* setup with different seeds finish at visibly different accuracies purely by luck. To claim an intervention actually helped, you run several **seeds**, measure the **noise floor** (how much that final number wobbles run-to-run with nothing changed), and believe only an effect that clears that floor - a change smaller than the noise is not a result. The spread shrinks by the same $1/\sqrt{n}$ law we just saw for $G$, now in the number of seeds: halving the uncertainty costs four times the runs.
 
 Estimating $J$ is the easy half. The hard half: $J(\theta)$ is defined through *sampling*. You cannot backpropagate through a dice roll.
 
@@ -288,7 +300,7 @@ $$
 J = \sum_y \pi_\theta(y)\, r(y)
 $$
 
-Want $\nabla J$: how to nudge each token's **logit** so $J$ goes up. If this were a smooth function of the logits, just differentiate under the sum. Training never writes the sum: it *samples* a $y$, sees a reward, and has to update from that. Sampling is a hard argmax-of-noise(no gradient flows through the sampled index).
+Want $\nabla J$: how to nudge each token's **logit** so $J$ goes up. If this were a smooth function of the logits, just differentiate under the sum. Training never writes the sum: it *samples* a $y$, sees a reward, and has to update from that. But the sampled token is a discrete pick, so no gradient flows through it because sampling is effectively an argmax over the logits plus random noise, and an argmax has zero gradient.
 
 The way out is algebraic, by rewriting the gradient of the probability using a log:
 
@@ -348,7 +360,7 @@ $$
 \end{align*}
 $$
 
-First term: only the $y=i$ summand survives the indicator. Second term: $\sum \pi_\theta r$ is $J$ again, the sasme $0.2$ already sitting around. Check token `5`: $0.2\cdot(1-0.2)=0.16$. Token `4`: $0.4\cdot(0-0.2)=-0.08$. Same vector.
+First term: only the $y=i$ summand survives the indicator. Second term: $\sum \pi_\theta r$ is $J$ again, the same $0.2$ already sitting around. Check token `5`: $0.2\cdot(1-0.2)=0.16$. Token `4`: $0.4\cdot(0-0.2)=-0.08$. Same vector.
 
 | Token | $\pi_\theta$ | $r$ | $r-J$ | how this logit moves |
 | ----: | ----: | --: | ----: | -------------------: |
@@ -425,8 +437,6 @@ Now drop the baseline and watch it break. Each sample's weight becomes its *raw*
 
 On plain 0/1 rewards the variance win by itself is small, about **1.4×** over the whole gradient because 0 and 1 already sit close together, so there is barely any offset to cancel. The baseline earns its keep the moment rewards stop being clean, centered 0/1, which in practice they do. (The variance-minimizing constant here works out to almost exactly the mean, so using the mean captures nearly all of the benefit.)
 
-Rollouts are expensive, and this loop takes a single gradient step per group before discarding it.
-
 ### The whole update loop, so far
 
 Everything up to now as one loop: sample a group, score it, turn scores into advantages, push each sample by its advantage.
@@ -439,6 +449,8 @@ for step in range(num_steps):
     g = mean(A * grad_logpi(y) for A, y in zip(adv, ys))  # grad_logpi(y) = onehot(y) − pi_theta
     theta = theta + lr * g                             # gradient ASCENT: maximize reward
 ```
+
+Rollouts are expensive: this loop takes one gradient step per group, then throws the completions away.
 
 On the toy at `G=8`, a step draws a couple of correct `5`s among mostly `4`s: the advantage tags the `5`s positive and the `4`s negative, and the update nudges the logits so $\pi_\theta(5)$ climbs and $\pi_\theta(4)$ falls. Run it and the 0.2 goes up.
 
@@ -471,7 +483,7 @@ One exact gradient step on the toy, learning rate $0.1$:
 |     6 |                 0.20 |               0.1994 | 0.997 |
 |    15 |                 0.10 |               0.0999 | 0.999 |
 
-Ratios sit in $[0.993, 1.017]$. Expected reward under $\pi_{\mathrm{new}}$ is $\pi_{\mathrm{new}}(5)=0.2035$. The IS estimate $\sum \pi_{\mathrm{old}}\cdot\mathrm{ratio}\cdot r$ is the same $0.2035$, term by term. Exact, not approximate.
+Ratios sit in $[0.993, 1.017]$, very close to 1. The full sum $\sum \pi_{\mathrm{old}}\cdot\mathrm{ratio}\cdot r$ recovers $\pi_{\mathrm{new}}(5)=0.2035$ exactly but that exactness is *not* what closeness buys. That sum is an identity; it comes out right for *any* drift (the wild case below reproduces its $0.5$ just as exactly). What closeness buys is that a *sampled* estimate barely differs from on-policy: with every ratio ≈ 1, a handful of draws from $\pi_{\mathrm{old}}$ land almost exactly where draws from $\pi_{\mathrm{new}}$ would, so the reweighting adds almost no noise.
 
 ### When they drift, the correction overcompensates
 
@@ -487,7 +499,7 @@ The ratio tries to fix that: "when old *does* emit `5`, new would have emitted i
 |     6 | 0.10 | 0.10 | 1 |
 |    15 | 0.10 | 0.10 | 1 |
 
-Draw \(G=8\) from **old**. Reward is still 1 only on `5`, then multiply by the ratio:
+The full sum is still exact: $\sum \pi_{\mathrm{old}}\cdot\mathrm{ratio}\cdot r = 0.05 \times 10 = 0.5$. The trouble is you never get to average over all of $\pi_{\mathrm{old}}$; you get \(G=8\) draws. Reward is 1 only on `5`, so multiply each by its ratio:
 
 - No `5` in the eight (happens \(0.95^8 \approx 66\%\) of the time): every term is 0, so \(\hat{J}=0\).
 - One `5`: that term is \(10 \times 1\), the other seven are 0, so \(\hat{J}=10/8=1.25\).
@@ -509,15 +521,17 @@ $$
 
 zero when the policies match, growing as they separate. **TRPO** takes this literally: at each step, maximize the importance-weighted reward *subject to* $D_{\mathrm{KL}}(\pi_{\mathrm{old}}\|\pi_{\mathrm{new}}) \le \delta$ which is a hard leash of radius $\delta$ around the old policy. Inside the leash the reused samples are trustworthy; the constraint simply forbids the runaway step.
 
-It works, and the price is stiff. A KL-constrained step is a second-order problem: you need the curvature of the KL(the Fisher information matrix) and solve it with conjugate gradients plus a line search, every update. For a model with billions of parameters that is a great deal of machinery to avoid one bad step.
+It works, and the price is stiff. A KL-constrained step is a second-order problem: you need the curvature of the KL (the Fisher information matrix) and solve it with conjugate gradients plus a line search, every update. For a model with billions of parameters that is a great deal of machinery to avoid one bad step.
 
 ## The cheaper leash: PPO's clip
 
-PPO keeps the goal (don't let one reused batch drag the policy too far) and drops the constrained solve for something first-order and blunt. The reused-sample update already weights each advantage by the ratio $\rho = \pi_{\mathrm{new}}(y)/\pi_{\mathrm{old}}(y)$. PPO just **clips that ratio** into $[1-\epsilon,\,1+\epsilon]$ and optimizes
+PPO keeps the goal (don't let one reused batch drag the policy too far) and drops the constrained solve for something first-order and blunt. The reused-sample update already weights each advantage by the ratio $\rho = \pi_{\mathrm{new}}(y)/\pi_{\mathrm{old}}(y)$. PPO just **clips that ratio** into $[1-\epsilon,\,1+\epsilon]$ and maximizes
 
 $$
-L^{\mathrm{PPO}} = \mathbb{E}\Big[\min\big(\rho\,A,\ \ \mathrm{clip}(\rho,\,1-\epsilon,\,1+\epsilon)\,A\big)\Big]
+J^{\mathrm{PPO}} = \mathbb{E}\Big[\min\big(\rho\,A,\ \ \mathrm{clip}(\rho,\,1-\epsilon,\,1+\epsilon)\,A\big)\Big]
 $$
+
+(the PPO paper writes this as $L^{\mathrm{CLIP}}$; same thing, an objective to push up).
 
 One rule makes the whole thing make sense: **the clip only brakes a step in the direction the update is trying to move the ratio, and never brakes the correction back toward 1.** A *good* action ($A>0$) wants its ratio pushed **up**; a *bad* action ($A<0$) wants it pushed **down**. Overshoot the band in that wanted direction and the objective goes flat.
 
@@ -531,21 +545,23 @@ Past $\rho=1.2$ the objective is **flat** (gradient zero): no extra reward for p
 
 **Bad action: where the flat side flips.** Token `4` is wrong, $A=-0.2$; the update wants its ratio *down*.
 
-- Reuse drives $\rho$ **below** the band, say $\rho=0.5$: $\min(0.5\cdot(-0.2),\ 0.8\cdot(-0.2)) = \min(-0.10,\,-0.16) = -0.16$(the clipped term), **flat**. We've already made the mistake 20% less likely so the clip stops us punishing it further on stale evidence.
-- But if the model still *over*-likes the mistake, $\rho=2.0$: $\min(2.0\cdot(-0.2),\ 1.2\cdot(-0.2)) = \min(-0.40,\,-0.24) = -0.40$(the *unclipped* term), and it grows with $\rho$. A confidently-wrong action is pushed down **hard, with no cap.**
+- Reuse drives $\rho$ **below** the band, say $\rho=0.5$: $\min(0.5\cdot(-0.2),\ 0.8\cdot(-0.2)) = \min(-0.10,\,-0.16) = -0.16$ (the clipped term), **flat**. The objective flattens once $\rho$ drops past $0.8$ — the mistake already 20% less likely than under $\pi_{\mathrm{old}}$ — and $\rho=0.5$ is well past that, so the clip stops us punishing it further on stale evidence.
+- But if the model still *over*-likes the mistake, $\rho=2.0$: $\min(2.0\cdot(-0.2),\ 1.2\cdot(-0.2)) = \min(-0.40,\,-0.24) = -0.40$ (the *unclipped* term), and it grows with $\rho$. A confidently-wrong action is pushed down **hard, with no cap.**
 
 Same band, opposite behavior by sign:
 
 | | ρ below band | ρ above band |
 | :-- | :-- | :-- |
-| **good action** (wants ↑) | full push up | **flat**(promotion capped) |
-| **bad action** (wants ↓) | **flat**(can't over-punish) | full push down(heavy) |
+| **good action** (wants ↑) | full push up | **flat** (promotion capped) |
+| **bad action** (wants ↓) | **flat** (can't over-punish) | full push down (heavy) |
 
 So the clip is *subtle with optimism, heavy on confident mistakes*: a good action can't be chased more than $+\epsilon$, but a mistake the model still favors is suppressed in proportion to how much it favors it.
 
 $\min$ is used because it makes the surrogate **pessimistic** so always the less-favorable of clipped and unclipped is picked, so an overshoot in the wanted direction is never *rewarded*, only ignored, while a correction back toward 1 keeps its full gradient.
 
 So PPO is a soft, one-sided trust region enforced per update, no Fisher matrix in sight. The KL you would have constrained in TRPO becomes a *diagnostic* you watch, $D_{\mathrm{KL}}(\pi_{\mathrm{old}}\|\pi_{\mathrm{new}})$ creeping up as you take more inner steps on one group.
+
+There is a **bias–variance** trade hiding in this. The raw importance-sampled update is *unbiased*(averaged over enough samples it points the right way) but its variance explodes as the policy drifts (the wild estimates from the drift example). The clip caps that variance, and pays for it with a little **bias**: the clipped, pessimistic surrogate is no longer the exact gradient. Accepting a small, deliberate bias to kill a lot of variance is the whole reason it works(and it is why LLM RL is so touchy about staleness). A heavily-pretrained policy sits in a very precise spot, so even a little bias from stale, off-policy samples can drag it somewhere worse; the clip is the leash that keeps that drift in check.
 
 ## The critic, and why GRPO doesn't use one
 
@@ -556,7 +572,7 @@ The principled answer is a **value function** $V(s)$: the reward a state should 
 - **Learn it.** Train a second network $V_\phi$ next to the policy to predict it, this acts as the *critic* to the policy's *actor*. **This is PPO.** In genuine multi-step RL the critic earns its keep, because reward can arrive midway through a trajectory and must be spread back over the steps that earned it. RLVR, with one verifier score per finished answer, barely needs it.
 - **Estimate it by sampling.** For a fixed prompt, draw a *group* of completions and use their mean reward as $V$. No second network as we then pay in samples instead of parameters.
 
-That second route is **GRPO**. "Group-relative" means the baseline is the group's own mean, hence local, and the advantage is $r_i - \mathrm{mean}(\text{group})$ (usually divided by the group's std). It drops the critic entirely.
+That second route is **GRPO**. "Group-relative" means the baseline is the group's own mean, hence local, and the advantage is $r_i - \mathrm{mean}(\text{group})$, usually also divided by the group's std which standardizes the scale so an easy prompt and a hard one contribute comparable gradients, instead of whichever happens to have the larger reward spread dominating the update. It drops the critic entirely.
 
 ## Credit assignment: GAE (stepping off the toy)
 
@@ -572,19 +588,23 @@ $$
 
 with a **discount** $\gamma \in (0,1]$ that says how much a reward counts *later versus right now*. Think of it as patience. At $\gamma$ near 1 a reward ten steps away is worth almost as much as one this instant, so credit reaches far back to whatever set it up; at a small $\gamma$ the model is myopic, meaning that distant rewards are heavily shrunk, and credit for a reward barely reaches past the steps just before it. So $\gamma$ sets the **horizon** over which actions and rewards are linked.
 
+![](/assets/images/gae_smoothening.png)
+
 The value $V(s_t)$ is the expected return from $s_t$, and the advantage of the action actually taken is $G_t - V(s_t)$ which tells us whether actual return beat the expected return, the same move as before, now once per step.
 
 The hard part is credit: a reward at step 5 might be owed to the action at step 1. There are two ways to judge how good a single step was, and they pull against each other.
 
 One extreme is the **full return** $G_t$: take the step, then watch everything that actually happens afterward and score the step by the real total. Honest, but it soaks up *all* the downstream luck, so it is noisy (high variance).
 
-The other extreme leans on the critic. Recall $V(s)$ is the critic's guess of how well things go from state $s$. Before the step, the critic expects $V(s_t)$. You take the action, collect the one real reward $r_t$, and land in $s_{t+1}$, where the critic now expects $V(s_{t+1})$. Stack those up:
+The other extreme leans on the critic. Recall $V(s)$ is the critic's guess of how well things go from state $s$. Rather than wait for the whole future, judge the step by a cheaper question - **did it leave things better than the critic expected?** That one-step surprise is the **TD error** $\delta_t$ (*temporal difference*): the critic's guess *after* the step minus its guess *before*, corrected by the one real reward you actually saw.
+
+Concretely: before the step the critic expects $V(s_t)$; you take the action, collect reward $r_t$, land in $s_{t+1}$ where it now expects $V(s_{t+1})$. So
 
 $$
-\delta_t = \underbrace{r_t + \gamma\, V(s_{t+1})}_{\text{fresh guess, using one real reward}} \;-\; \underbrace{V(s_t)}_{\text{the guess before the step}}
+\delta_t = \underbrace{r_t + \gamma\, V(s_{t+1})}_{\text{guess after: one real reward + critic's read of the rest}} \;-\; \underbrace{V(s_t)}_{\text{guess before the step}}
 $$
 
-and it literally asks **did this step turn out better or worse than the critic expected?** Positive $\delta_t$ means do more of that action, negative means it went worse than predicted so do less. This is the *temporal difference*(**TD error**), because it is literally the gap between the critic's estimate at two successive times, before versus after the step.
+Positive $\delta_t$ means the step beat expectations (do more of that action); negative means it fell short.
 
 So: the full return is honest-but-noisy, the TD error is quiet-but-critic-dependent. **GAE** dials between the two, as an exponentially-weighted sum of those one-step surprises:
 
@@ -592,13 +612,14 @@ $$
 \hat{A}^{\mathrm{GAE}}_t = \sum_{l=0}^{\infty} (\gamma\lambda)^l\, \delta_{t+l}
 $$
 
-Look at the weights $(\gamma\lambda)^l$: each future surprise $\delta_{t+l}$ is folded in, but faded out the further ahead it sits. So $\lambda$ is really a knob for **how far you keep listening to what actually happened before you let the critic take over:**
+The weight $(\gamma\lambda)^l$ fades each future surprise the further ahead it sits, and $\lambda \in [0,1]$ sets how fast:
 
-- $\lambda = 0$ means only $\delta_t$ survives (every $l \ge 1$ weight is zero). You take the critic's one-step verdict and ignore everything after. Quietest, most critic-dependent.
-- $\lambda = 1$ means every future surprise counts in full, and the sum telescopes into the *actual* return minus $V(s_t)$. Pure observed outcome, no mid-trajectory trust in the critic. Honest, noisiest.
-- in between means near-term rewards count for real, far-term ones fade and hand off to the critic.
+- $\lambda = 0$: only $\delta_t$ survives — take the critic's one-step read, ignore the rest. Quiet, critic-dependent.
+- $\lambda = 1$: every surprise counts, telescoping into the *actual* return minus $V(s_t)$. Honest, noisy.
 
-$\gamma$ and $\lambda$ both shrink distant steps, and even multiply together in $(\gamma\lambda)^l$ but they answer different questions. $\gamma$ is how much you *care* about far-off rewards and it changes the return itself, i.e. what "good" even means. $\lambda$ changes nothing about the goal as it only trades bias for variance in *estimating* the advantage, how much to trust observed rewards over the critic. Turn $\gamma$ and you change the objectivem turn $\lambda$ and you change only the estimate of it. That one $\gamma$ then turns up everywhere a future gets valued such as in discounting the reward in the return, the landed value $V(s_{t+1})$ inside $\delta_t$, and each distant surprise in the $(\gamma\lambda)^l$ weights.
+In soccer terms, **$\lambda$** asks: *credit the pass by the coach's instant read ("dangerous position"), or wait to see whether the attack actually scores?* Trust the coach and every identical pass gets the same verdict(low **variance**) but you inherit whatever the coach is *systematically* wrong about (**bias**). Wait for the goal and you are right on average, but the verdict swings with all the downstream luck (high variance, no bias). Bias is a consistent tilt; variance is random scatter; $\lambda$ picks the mix.
+
+$\gamma$ is a *different* knob, easy to confuse since both fade distant steps. **$\gamma$** asks *how much do I value a goal scored later?*,  $\lambda$ changes only how you *estimate* it. (That one $\gamma$ shows up wherever a future is valued: the return, the $V(s_{t+1})$ in $\delta_t$, and the $(\gamma\lambda)^l$ weights.)
 
 We will use a three-step episode as a made-up trajectory, not the arithmetic toy, since that one has only a single step. Take $\gamma = 1$, rewards $r = (0, 0, 1)$ (nothing until a win at the end), and a critic already predicting $V = (0.5, 0.6, 0.7)$ along the way. Each $\delta_t = r_t + V(s_{t+1}) - V(s_t)$ (terminal $V = 0$):
 
@@ -612,9 +633,11 @@ The advantage columns are just the TD errors added up with the $(\gamma\lambda)^
 
 Read step 0 across its row: its credit climbs $0.1 \to 0.225 \to 0.5$ as $\lambda$ opens up. At $\lambda = 0$ the critic says step 0 barely helped; at $\lambda = 1$ it earns full credit for the eventual win (and the Monte-Carlo check agrees: $G_0 - V(s_0) = 1 - 0.5 = 0.5$). Step 2 stays $0.3$ whatever $\lambda$ is because there is no future beyond the last step to fold in, so the dial has nothing left to turn.
 
-All of that credit-spreading assumed we actually *have* per-step rewards to spread, and that is precisely the hard part. A verifier can only score a *finished* answer, it has no cheap, reliable way to say whether the token you emitted halfway through was "good." We could train a separate model to grade partial work, but those are noisy and expensive, and a step that looks right can lead nowhere, and an odd-looking one can set up the win. So the robust, common choice is a **single reward at the very end**.
+And then what do we *do* with it? Nothing new. Whatever $\lambda$ you pick, GAE hands back one number per step, the advantage $\hat{A}_t$ and that is the same advantage the policy-gradient update multiplies $\nabla\log\pi$ by, the one PPO's clipped surrogate weights each token with. GAE only changes how that number is *estimated*; the update wrapped around it is exactly the one we already built. The whole detour was just to get a better $\hat{A}_t$ to plug back in.
 
-Putting that back into GAE. With one terminal reward, $\gamma = 1$, and no intermediate rewards, every step's advantage collapses to the *same* number(the final $r$ minus the baseline) so there is nothing to interpolate: GAE flattens to "broadcast the terminal advantage to every token." No per-step returns, no $\lambda$ to tune, and the critic's one remaining job (predict $V$ per step) shrinks to predicting a single per-prompt success rate which the **group mean already estimates for free**. So GRPO's group trick doesn't just replace the critic, it retires the entire multi-step advantage machinery the critic exists to feed.
+All of that credit-spreading assumed we actually *have* per-step rewards to spread, and that is precisely the hard part. A verifier can only score a *finished* answer, it has no cheap, reliable way to say whether the token you emitted halfway through was "good." We could train a separate model to grade partial work(a *process reward model*) but those are noisy, expensive, and tend to add bias that dilutes the very signal RL is after; a step that looks right can lead nowhere, and an odd-looking one can set up the win. So the robust, common choice is a **single reward at the very end**.
+
+GAE does not flatten on its own. Even with one terminal reward and $\gamma = 1$, the $\lambda = 1$ column above came out $0.5, 0.4, 0.3$: different per step, because each subtracts its own $V(s_t)$. The flattening is a *choice* GRPO makes. With no intermediate rewards a per-token critic has almost nothing to learn, so rather than train one, GRPO replaces the whole per-state $V(s_t)$ with a **single per-prompt baseline** $b$, the group's mean reward. *Then* every token's advantage is $r - b$, identical down the sequence, and there is nothing left for $\lambda$ to interpolate.
 
 ## GRPO, assembled
 
@@ -637,6 +660,55 @@ for step in range(num_steps):
         theta = theta + lr * grad(obj)                     # ascent
 ```
 
-That is the full GRPO update: group mean for the baseline, the clip for the trust region, a verifier for the reward(REINFORCE underneath it all), with the two swaps that make reuse safe and the critic unnecessary. Set `num_inner_steps = 1` and every `rho` is `1`, the clip never fires, and it reduces to the plain on-policy loop.
+That is the full GRPO update: group mean for the baseline, the clip for the trust region, a verifier for the reward (REINFORCE underneath it all), with the two swaps that make reuse safe and the critic unnecessary. Set `num_inner_steps = 1` and every `rho` is `1`, the clip never fires, and it reduces to the plain on-policy loop.
 
-A couple of practical points the single-token toy hides, the ratio and clip are applied **per token**, not per whole sequence so longer answers bring a length bias. Also, RLHF adds a KL-to-reference term(the mode-seeking reverse KL) on top of the reward.
+A couple of practical points the single-token toy hides. The ratio and clip are applied **per token**, not per whole sequence. And the **length bias** promised back at "5" vs "05" is real but it does not come from the clip; it comes from how the per-token losses are *aggregated*. GRPO averages each response's loss over its own length, so a long wrong answer is penalized more gently, per token, than a short one, thus nudging the model toward ever-longer completions (the Dr. GRPO / DAPO critique), with the raw log-prob penalty from "05" adding to it. Separately, RLHF hangs a KL-to-reference term (the mode-seeking reverse KL) on top of the reward.
+
+One training dynamic worth naming: **entropy collapse.** As RL sharpens the policy onto what already scores, $\pi$ can spike on a few tokens and stop exploring, and since RL only reinforces what it samples, a collapsed policy has nothing left to learn from. That is why practitioners watch entropy and sometimes add an **entropy bonus** to keep it spread.
+
+## Everything in one place 
+
+The whole arc is one idea that is to push probability toward what scores higher, refined step by step. Every RL variant below maximizes the *same* objective, expected reward $J(\theta) = \mathbb{E}_{y\sim\pi_\theta}[r(y)]$; they differ only in the per-batch **surrogate** they optimize and how safely they reuse samples. So each RL line below is written as a surrogate $J^{(\cdot)}$ you *maximize* over the sampled completions (held fixed — $\hat{\mathbb{E}}$ is the average over that batch — so differentiating it gives the policy-gradient update); SFT is the one loss $L$ you *minimize*. Read top to bottom, each line adds exactly one thing to the one above.
+
+**SFT** — imitate the labelled answer, token by token (minimize):
+
+$$
+L_{\mathrm{SFT}} = -\sum_t \log \pi_\theta(y_t \mid x, y_{\lt t})
+$$
+
+**REINFORCE** — imitate the model's *own* samples, weighted by reward (maximize):
+
+$$
+J^{\mathrm{REINFORCE}} = \hat{\mathbb{E}}\big[\, r(y)\,\log\pi_\theta(y) \,\big]
+\qquad\Rightarrow\qquad
+\nabla J = \hat{\mathbb{E}}\big[\, r(y)\,\nabla\log\pi_\theta(y) \,\big]
+$$
+
+**REINFORCE + baseline** — subtract a baseline $b$ so wrong answers also count; the weight becomes the advantage $A = r-b$ (maximize):
+
+$$
+J^{\mathrm{RF+baseline}} = \hat{\mathbb{E}}\big[\, (r(y)-b)\,\log\pi_\theta(y) \,\big]
+$$
+
+**TRPO** — reuse rollouts from $\pi_{\mathrm{old}}$ (ratio $\rho = \pi_\theta/\pi_{\mathrm{old}}$), held on a hard KL leash (maximize, constrained):
+
+$$
+J^{\mathrm{TRPO}} = \hat{\mathbb{E}}\big[\,\rho\, A\,\big]\quad\text{s.t.}\quad \hat{\mathbb{E}}\big[D_{\mathrm{KL}}(\pi_{\mathrm{old}}\,\|\,\pi_\theta)\big]\le\delta
+$$
+
+**PPO** — drop the constrained solve; enforce the leash with a cheap clip (maximize):
+
+$$
+J^{\mathrm{PPO}} = \hat{\mathbb{E}}\Big[\min\big(\rho\, A,\ \ \mathrm{clip}(\rho,\,1-\epsilon,\,1+\epsilon)\,A\big)\Big]
+$$
+
+**GRPO** — PPO's clip, but the advantage comes from a *group* of $G$ rollouts per prompt (no critic), applied per token (maximize):
+
+$$
+J^{\mathrm{GRPO}} = \hat{\mathbb{E}}\Big[\tfrac{1}{G}\sum_{i=1}^{G}\min\big(\rho_i A_i,\ \ \mathrm{clip}(\rho_i,\,1-\epsilon,\,1+\epsilon)\,A_i\big)\Big] \;-\; \beta\, D_{\mathrm{KL}}(\pi_\theta \,\|\, \pi_{\mathrm{ref}}),
+\qquad A_i = \frac{r_i - \mathrm{mean}(\mathbf{r})}{\mathrm{std}(\mathbf{r})}
+$$
+
+The trailing $-\beta\,D_{\mathrm{KL}}(\pi_\theta\|\pi_{\mathrm{ref}})$ is the optional RLHF reference leash (the mode-seeking reverse KL); pure RLVR usually drops it.
+
+In one breath: **SFT** imitates a label; **REINFORCE** imitates your own reward-weighted samples; the **baseline** turns reward into advantage; **TRPO/PPO** make it safe to reuse those samples; **GRPO** gets the advantage from a group instead of a critic.
