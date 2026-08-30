@@ -668,47 +668,96 @@ One training dynamic worth naming: **entropy collapse.** As RL sharpens the poli
 
 ## Everything in one place 
 
-The whole arc is one idea that is to push probability toward what scores higher, refined step by step. Every RL variant below maximizes the *same* objective, expected reward $J(\theta) = \mathbb{E}_{y\sim\pi_\theta}[r(y)]$; they differ only in the per-batch **surrogate** they optimize and how safely they reuse samples. So each RL line below is written as a surrogate $J^{(\cdot)}$ you *maximize* over the sampled completions (held fixed — $\hat{\mathbb{E}}$ is the average over that batch — so differentiating it gives the policy-gradient update); SFT is the one loss $L$ you *minimize*. Read top to bottom, each line adds exactly one thing to the one above.
+The whole arc is one idea that is to push probability toward what scores higher, refined step by step. Every RL variant below maximizes the *same* objective, expected reward $J(\theta) = \mathbb{E}_{y\sim\pi_\theta}[r(y)]$; they differ only in the per-batch **surrogate** they optimize and how safely they reuse samples. So each RL line below is written as a surrogate $J^{(\cdot)}$ you *maximize* over the sampled completions (held fixed $\hat{\mathbb{E}}$ is the average over that batch, so differentiating it gives the policy-gradient update); SFT is the one loss $L$ you *minimize*. The skeleton under each shows its loop, what it samples and whether a batch of rollouts buys **one** update or **many**.
 
-**SFT** — imitate the labelled answer, token by token (minimize):
+**SFT**: imitate the labelled answer, token by token (minimize):
 
 $$
 L_{\mathrm{SFT}} = -\sum_t \log \pi_\theta(y_t \mid x, y_{\lt t})
 $$
 
-**REINFORCE** — imitate the model's *own* samples, weighted by reward (maximize):
+```python
+for x, y in dataset:                  # external (prompt, answer) labels
+    theta -= lr * grad(-logpi(y, x))  # one step per batch, no sampling
+```
+
+**REINFORCE**: imitate the model's *own* samples, weighted by reward (maximize):
 
 $$
-J^{\mathrm{REINFORCE}} = \hat{\mathbb{E}}\big[\, r(y)\,\log\pi_\theta(y) \,\big]
+J^{\mathrm{REINFORCE}} = \hat{\mathbb{E}}_{y\sim\pi_\theta}\big[\, r(y)\,\log\pi_\theta(y) \,\big]
 \qquad\Rightarrow\qquad
-\nabla J = \hat{\mathbb{E}}\big[\, r(y)\,\nabla\log\pi_\theta(y) \,\big]
+\nabla J = \hat{\mathbb{E}}_{y\sim\pi_\theta}\big[\, r(y)\,\nabla\log\pi_\theta(y) \,\big]
 $$
 
-**REINFORCE + baseline** — subtract a baseline $b$ so wrong answers also count; the weight becomes the advantage $A = r-b$ (maximize):
+```python
+for step in range(N):
+    ys = [sample(pi_theta, x) for _ in range(G)]   # FRESH from the current policy
+    g  = mean(r(y) * grad_logpi(y) for y in ys)
+    theta += lr * g                                # ONE update, then discard ys
+```
+
+**REINFORCE + baseline**: subtract a baseline $b$ so wrong answers also count; the weight becomes the advantage $A = r-b$ (maximize):
 
 $$
-J^{\mathrm{RF+baseline}} = \hat{\mathbb{E}}\big[\, (r(y)-b)\,\log\pi_\theta(y) \,\big]
+J^{\mathrm{RF+baseline}} = \hat{\mathbb{E}}_{y\sim\pi_\theta}\big[\, (r(y)-b)\,\log\pi_\theta(y) \,\big]
 $$
 
-**TRPO** — reuse rollouts from $\pi_{\mathrm{old}}$ (ratio $\rho = \pi_\theta/\pi_{\mathrm{old}}$), held on a hard KL leash (maximize, constrained):
+```python
+for step in range(N):
+    ys = [sample(pi_theta, x) for _ in range(G)]   # still fresh, on-policy
+    b  = mean(r(y) for y in ys)                    # baseline = group mean
+    g  = mean((r(y) - b) * grad_logpi(y) for y in ys)
+    theta += lr * g                                # one update, then discard
+```
+
+**TRPO**: reuse rollouts from $\pi_{\mathrm{old}}$ (ratio $\rho = \pi_\theta/\pi_{\mathrm{old}}$), held on a hard KL leash (maximize, constrained):
 
 $$
-J^{\mathrm{TRPO}} = \hat{\mathbb{E}}\big[\,\rho\, A\,\big]\quad\text{s.t.}\quad \hat{\mathbb{E}}\big[D_{\mathrm{KL}}(\pi_{\mathrm{old}}\,\|\,\pi_\theta)\big]\le\delta
+J^{\mathrm{TRPO}} = \hat{\mathbb{E}}_{y\sim\pi_{\mathrm{old}}}\big[\,\rho\, A\,\big]\quad\text{s.t.}\quad \hat{\mathbb{E}}_{y\sim\pi_{\mathrm{old}}}\big[D_{\mathrm{KL}}(\pi_{\mathrm{old}}\,\|\,\pi_\theta)\big]\le\delta
 $$
 
-**PPO** — drop the constrained solve; enforce the leash with a cheap clip (maximize):
+```python
+for step in range(N):
+    pi_old = freeze(pi_theta)
+    ys = [sample(pi_old, x) for _ in range(G)]
+    # ONE constrained, second-order step:
+    #   max mean(rho * A)  s.t.  KL(pi_old || pi_theta) <= delta
+    theta = trust_region_step(ys, A)               # Fisher + conjugate gradient
+```
+
+**PPO**: drop the constrained solve; enforce the leash with a cheap clip (maximize):
 
 $$
-J^{\mathrm{PPO}} = \hat{\mathbb{E}}\Big[\min\big(\rho\, A,\ \ \mathrm{clip}(\rho,\,1-\epsilon,\,1+\epsilon)\,A\big)\Big]
+J^{\mathrm{PPO}} = \hat{\mathbb{E}}_{y\sim\pi_{\mathrm{old}}}\Big[\min\big(\rho\, A,\ \ \mathrm{clip}(\rho,\,1-\epsilon,\,1+\epsilon)\,A\big)\Big]
 $$
 
-**GRPO** — PPO's clip, but the advantage comes from a *group* of $G$ rollouts per prompt (no critic), applied per token (maximize):
+```python
+for step in range(N):
+    pi_old = freeze(pi_theta)
+    ys = [sample(pi_old, x) for _ in range(G)]
+    for _ in range(K):                             # reuse the SAME batch K times
+        rho = pi_theta(y) / pi_old(y)              # 1.0 on the first inner step
+        theta += lr * grad(mean(min(rho*A, clip(rho, 1-eps, 1+eps)*A)))
+```
+
+**GRPO**: PPO's clip, but the advantage comes from a *group* of $G$ rollouts per prompt (no critic), applied per token (maximize):
 
 $$
-J^{\mathrm{GRPO}} = \hat{\mathbb{E}}\Big[\tfrac{1}{G}\sum_{i=1}^{G}\min\big(\rho_i A_i,\ \ \mathrm{clip}(\rho_i,\,1-\epsilon,\,1+\epsilon)\,A_i\big)\Big] \;-\; \beta\, D_{\mathrm{KL}}(\pi_\theta \,\|\, \pi_{\mathrm{ref}}),
+J^{\mathrm{GRPO}} = \hat{\mathbb{E}}_{y_i\sim\pi_{\mathrm{old}}}\Big[\tfrac{1}{G}\sum_{i=1}^{G}\min\big(\rho_i A_i,\ \ \mathrm{clip}(\rho_i,\,1-\epsilon,\,1+\epsilon)\,A_i\big)\Big] \;-\; \beta\, D_{\mathrm{KL}}(\pi_\theta \,\|\, \pi_{\mathrm{ref}}),
 \qquad A_i = \frac{r_i - \mathrm{mean}(\mathbf{r})}{\mathrm{std}(\mathbf{r})}
 $$
 
-The trailing $-\beta\,D_{\mathrm{KL}}(\pi_\theta\|\pi_{\mathrm{ref}})$ is the optional RLHF reference leash (the mode-seeking reverse KL); pure RLVR usually drops it.
+```python
+for step in range(N):
+    pi_old = freeze(pi_theta)
+    ys = [sample(pi_old, x) for _ in range(G)]      # G rollouts per prompt
+    A  = [(r(y) - mean(r)) / (std(r) + 1e-8) for y in ys]  # group-relative, no critic
+    for _ in range(K):                              # reuse the SAME group K times
+        rho = pi_theta(y) / pi_old(y)
+        theta += lr * grad(mean(min(rho*A, clip(rho, 1-eps, 1+eps)*A)))
+        # optional RLHF leash:  - beta * grad(KL(pi_theta || pi_ref))
+```
 
-In one breath: **SFT** imitates a label; **REINFORCE** imitates your own reward-weighted samples; the **baseline** turns reward into advantage; **TRPO/PPO** make it safe to reuse those samples; **GRPO** gets the advantage from a group instead of a critic.
+The trailing $-\beta\,D_{\mathrm{KL}}(\pi_\theta\|\pi_{\mathrm{ref}})$ is the optional RLHF reference leash: $\pi_{\mathrm{ref}}$ is the frozen pre-RL model (the SFT/base checkpoint, *not* the $\pi_{\mathrm{old}}$, which refreshes every step), and the term keeps $\pi_\theta$ from drifting too far from it (the mode-seeking reverse KL).
+
+In one breath: **SFT** imitates a label; **REINFORCE** imitates model's own reward-weighted samples; the **baseline** turns reward into advantage; **TRPO/PPO** make it safe to reuse those samples; **GRPO** gets the advantage from a group instead of a critic.
