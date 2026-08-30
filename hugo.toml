@@ -31,13 +31,6 @@ url = "https://x.com/aakash_thatte"
 name = "linkedin"
 url = "https://www.linkedin.com/in/aakash-thatte/"
 
-[menu]
-[[menu.main]]
-identifier = "about"
-name = "About"
-url = "/about/"
-weight = 10
-
 [[menu.main]]
 identifier = "tags"
 name = "Tags"
